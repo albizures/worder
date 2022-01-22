@@ -2,38 +2,40 @@ import React from 'react';
 import {
 	useRecoilCallback,
 	useRecoilState,
-	useSetRecoilState,
+	useRecoilValue,
 } from 'recoil';
 import hotkeys from 'hotkeys-js';
 import { Word, TopWords } from '../types';
 import { removeItem } from '../utils/array';
 import { Button } from '../components/Button';
 import { SimilarWords } from '../components/SimilarWords';
-import { getWords } from '../utils/words';
+import { Uploader } from '../components/Uploader';
 import { wordsAtom, wordIndexAtom } from '../atoms';
 import { getDataFromLocalStorage, saveLocalStorage } from '../utils';
 import { redoCallback, undoCallback } from '../state/history';
+import classNames from 'classnames';
 
 interface FullListProps {
-	words: Word[];
-	currentIndex: number;
-	onSelectWord: (index: number) => void;
 	saveToCommon: (index: number) => void;
 	removeWord: (index: number) => void;
 }
 
 const FullList: React.FC<FullListProps> = (props) => {
-	const {
-		words,
-		currentIndex,
-		onSelectWord,
-		saveToCommon,
-		removeWord,
-	} = props;
+	const { removeWord, saveToCommon } = props;
+	const words = useRecoilValue<Word[]>(wordsAtom);
+	const [currentIndex, setIndex] = useRecoilState(wordIndexAtom);
+
+	const onSelectWord = (word: number) => {
+		setIndex(word);
+	};
+
+	console.log(currentIndex);
+
 	return (
 		<div
-			className="flex relative h-full p-2"
-			style={{ maxHeight: 999 }}
+			className={classNames('relative h-full p-2', {
+				hidden: Number.isInteger(currentIndex),
+			})}
 		>
 			<div className="overflow-y-auto">
 				<ul>
@@ -63,39 +65,6 @@ const FullList: React.FC<FullListProps> = (props) => {
 				</ul>
 			</div>
 		</div>
-	);
-};
-
-const Uploader = () => {
-	const setWords = useSetRecoilState(wordsAtom);
-	const [text, setText] = React.useState('');
-	const onChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-		console.log(e.target.files);
-
-		const file = e.target.files[0];
-
-		const text = await file.text();
-
-		setText(text);
-	};
-	React.useEffect(() => {
-		setWords(getWords(text));
-	}, [text]);
-
-	return (
-		<>
-			<label htmlFor="file" className="inset-0 fixed">
-				<span className="absolute flex items-center m-3 inset-0 border-gray-400 border-2 border-dashed">
-					Drop a file text here
-				</span>
-				<input
-					onChange={onChange}
-					type="file"
-					id="file"
-					className="opacity-0 absolute inset-0 w-full"
-				/>
-			</label>
-		</>
 	);
 };
 
@@ -131,10 +100,6 @@ const Simple = () => {
 		setWords(words);
 		setCommon(common);
 	}, []);
-
-	const onSelectWord = (word: number) => {
-		setIndex(word);
-	};
 
 	const saveToCommon = (index: number) => {
 		const word = words[index];
@@ -182,23 +147,25 @@ const Simple = () => {
 		link.click();
 	};
 
+	const onClean = () => {};
+
 	if (words.length === 0) {
 		return <Uploader />;
 	}
 
 	return (
-		<div className="flex fixed flex-col">
-			<div>
-				<span>Number of words: {words.length}</span>
+		<div className="">
+			<div className="sticky top-0 bg-white z-10 p-2 shadow">
+				<p>Number of words: {words.length}</p>
 				<Button color="blue" onClick={onDownload}>
 					download
 				</Button>
+				<Button color="blue" onClick={onClean}>
+					clean
+				</Button>
 			</div>
-			<div className="flex">
+			<div>
 				<FullList
-					onSelectWord={onSelectWord}
-					currentIndex={currentIndex}
-					words={words}
 					saveToCommon={saveToCommon}
 					removeWord={removeWord}
 				/>

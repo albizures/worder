@@ -8,8 +8,12 @@
  *
  * @module
  */
-
-import { useRecoilValue, useRecoilCallback } from 'recoil';
+import React from 'react';
+import {
+	useRecoilValue,
+	useRecoilCallback,
+	useSetRecoilState,
+} from 'recoil';
 import {
 	currentWordAtom,
 	similarWordsAtom,
@@ -21,6 +25,7 @@ import {
 	SimilarWord,
 	Word,
 } from '../types';
+import diciojs from 'dicionario.js';
 import { Button } from './Button';
 import { createActionHandlers, historyState } from '../state/history';
 
@@ -100,24 +105,98 @@ const SimilarItem: React.FC<SimilarWord> = (word) => {
 	);
 };
 
+interface WordInfo {
+	class: string;
+	meanings: string;
+	etymology: string;
+}
+
 export const SimilarWords: React.FC = () => {
 	const currentWord = useRecoilValue(currentWordAtom);
 	const similar = useRecoilValue(similarWordsAtom);
+	const setIndex = useSetRecoilState(wordIndexAtom);
+	const [info, setInfo] = React.useState<WordInfo>();
+
+	const onClose = () => {
+		setIndex(undefined);
+	};
+
+	console.log(info);
+
+	React.useEffect(() => {
+		if (currentWord) {
+			diciojs.significado(currentWord.word).then((info: WordInfo) => {
+				setInfo(info);
+			});
+		}
+	}, [currentWord]);
 
 	if (!currentWord) {
-		return (
-			<div className="border-l py-1 px-2">
-				<span>no word selected</span>
-			</div>
-		);
+		return null;
 	}
 
+	const normalizedWord = currentWord.word
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '');
+
 	return (
-		<div className="border-l py-1 px-2">
-			<span>word:</span>{' '}
-			<span className="font-bold">{currentWord.word}</span>
+		<div className="sticky top-10">
+			<div className="flex justify-between">
+				<div>
+					<span>word:</span>{' '}
+					<span className="font-bold">{currentWord.word}</span>
+				</div>
+				<div>
+					<button
+						onClick={onClose}
+						className="border rounded px-3 py-1 m-1 text-red-300"
+					>
+						x
+					</button>
+				</div>
+			</div>
+			{info && (
+				<>
+					<p>Type: {info.class}</p>
+					<details>
+						<summary>Meanings</summary>
+						<p>{info.meanings}</p>
+					</details>
+					<details>
+						<summary>Etymology</summary>
+						<p>{info.etymology}</p>
+					</details>
+				</>
+			)}
 			<p className="white">
 				<a
+					className="text-blue-400 underline mr-1"
+					href={`https://www.dicio.com.br/${encodeURIComponent(
+						normalizedWord,
+					)}/`}
+					target="_blank"
+				>
+					dictionary
+				</a>
+				<a
+					className="text-blue-400 underline mr-1"
+					href={`https://translate.google.com/?sl=pt&tl=es&text=${encodeURIComponent(
+						currentWord.word,
+					)}&op=translate`}
+					target="_blank"
+				>
+					translation
+				</a>
+				<a
+					className="text-blue-400 underline"
+					href={`https://www.conjugacao.com.br/busca.php?q=${encodeURIComponent(
+						currentWord.word,
+					)}`}
+					target="_blank"
+				>
+					conjugation
+				</a>
+				{/* <a
 					className="text-blue-400 underline"
 					target="_blank"
 					href={`https://translate.yandex.ru/?lang=ru-en&text=${currentWord.word}`}
@@ -144,7 +223,7 @@ export const SimilarWords: React.FC = () => {
 					href={`https://cooljugator.com/rua/${currentWord.word}`}
 				>
 					adjectives
-				</a>
+				</a> */}
 			</p>
 			<ul>
 				{similar.map((word, index) => {

@@ -18,3 +18,7 @@ export const getDataFromLocalStorage = (): TopWords => {
 		}
 	);
 };
+
+export const cleanDataFromLocalStorage = () => {
+	localStorage.removeItem('top-words');
+};

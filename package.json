@@ -8,12 +8,14 @@
   },
   "dependencies": {
     "classnames": "^2.3.1",
+    "dicionario.js": "^1.1.1-b",
     "hotkeys-js": "^3.8.7",
     "isomorphic-fetch": "^3.0.0",
     "next": "^12.0.3",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "recoil": "^0.5.2"
+    "recoil": "^0.5.2",
+    "words-pt": "^1.0.19"
   },
   "devDependencies": {
     "@albizures/prettier-config": "^1.0.1",

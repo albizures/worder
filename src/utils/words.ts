@@ -215,6 +215,7 @@ export const sortByUsage = (a: Word, b: Word) => b.usages - a.usages;
 export const getWords = (text: string, ignore = []): Word[] => {
 	const map = text
 		.trim()
+		.replace('\n', ' ')
 		.replace(/[\(\)\[\]\'\"\!\?\…\:\№\–\-,.\;\?«»\n]/g, '')
 		.replace(/,/g, '')
 		.replace(/[\n\t\s]/g, ' ')
